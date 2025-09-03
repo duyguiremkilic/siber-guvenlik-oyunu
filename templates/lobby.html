@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🎮 Siber Güvenlik Oyunu Lobisi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1>🎮 Siber Güvenlik Oyunu</h1>
+                <p>Takımını seç, oyuna katıl!</p>
+            </div>
+
+            <div class="option-grid">
+                <!-- Red Team -->
+                <div class="option-card">
+                    <form action="/create_room" method="post">
+                        <h3>🔴 Red Team - Oda Oluştur</h3>
+                        <input type="text" name="player_name" placeholder="Adınız" required>
+                        <input type="number" name="tur_sayisi" placeholder="Kaç tur oynansın?" min="1" max="10" required>
+                        <div class="btn-container">
+                            <button type="submit" class="btn">Oluştur</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Blue Team -->
+                <div class="option-card">
+                    <form action="/join_room" method="post">
+                        <h3>🔵 Blue Team - Odaya Katıl</h3>
+                        <input type="text" name="player_name" placeholder="Adınız" required>
+                        <input type="text" name="room_id" placeholder="Oda Kodu" required>
+                        <div class="btn-container">
+                            <button type="submit" class="btn">Katıl</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <p>💡 Oda kodunu Red Team oluşturur. Blue Team bu kodla katılır.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

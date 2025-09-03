@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Oyun Sonu</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1>🏁 Oyun Bitti!</h1>
+            </div>
+
+            <h2>🎯 SONUÇLAR</h2>
+
+            <div class="score-board">
+                <div class="score blue-score">
+                    <h3>🔵 Blue Team</h3>
+                    <p>Puan: {{ blue_puan }}</p>
+                    <p>Kalan Bütçe: ${{ blue_butce }}</p>
+                </div>
+
+                <div class="score red-score">
+                    <h3>🔴 Red Team</h3>
+                    <p>Puan: {{ red_puan }}</p>
+                </div>
+            </div>
+
+            <!-- Oyun Özeti -->
+            <div class="summary-box">
+                <h3>📅 Oyun Özeti</h3>
+                <p>Toplam oynanan tur: {{ tur }} / {{ maksimum_tur }}</p>
+            </div>
+
+            <div class="info-box">
+                <p>⭐ İtibar Durumu: {{ itibar }}</p>
+            </div>
+
+            {% if blue_puan > red_puan %}
+            <div class="success-box">
+                <h2 class="winner">🎉 Blue Team Kazandı!</h2>
+            </div>
+            {% elif red_puan > blue_puan %}
+            <div class="error-box">
+                <h2 class="winner">🎉 Red Team Kazandı!</h2>
+            </div>
+            {% else %}
+            <div class="info-box">
+                <h2 class="winner">🤝 Berabere!</h2>
+            </div>
+            {% endif %}
+
+            <div class="btn-container">
+                <a href="{{ url_for('index') }}" class="btn">🔄 Yeni Oyun Başlat</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

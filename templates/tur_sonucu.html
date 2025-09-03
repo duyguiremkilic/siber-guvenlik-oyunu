@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tur Sonucu</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1>🔄 Tur {{ tur }} Sonucu</h1>
+            </div>
+
+            <!-- Genel Mesaj -->
+            <div class="evaluation-box">
+                <h2>📊 Genel Savunma Değerlendirmesi</h2>
+                <p class="evaluation-message">{{ genel_mesaj }}</p>
+            </div>
+
+            <!-- Savunma Sonuçları -->
+            <div class="real-time-results">
+                <h2>🛡️ Savunma Önlemleri Sonuçları</h2>
+
+                {% for onlem in dogru_onlemler %}
+                <div class="result-card basarili">
+                    <div class="result-icon">✅</div>
+                    <div class="result-content">
+                        <h3>{{ onlem }}</h3>
+                        <p>Doğru önlem uygulandı.</p>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% for onlem in yanlis_onlemler %}
+                <div class="result-card basarisiz">
+                    <div class="result-icon">❌</div>
+                    <div class="result-content">
+                        <h3>{{ onlem }}</h3>
+                        <p>Yanlış seçim! Ek maliyet uygulanmış olabilir.</p>
+                        <p class="warning">🔻 İtibar kaybı riski!</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Hasar Raporu -->
+            {% if ek_maliyet > 0 %}
+            <div class="damage-report">
+                <h3>💸 Hasar Raporu</h3>
+                <p>Ek Maliyet: ${{ ek_maliyet }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Skor Durumu -->
+            <div class="score-board">
+                <div class="score blue-score">
+                    <h3>🔵 Blue Team</h3>
+                    <p>Puan: {{ blue_puan }}</p>
+                    <p>Kalan Bütçe: ${{ blue_butce }}</p>
+                </div>
+                <div class="score red-score">
+                    <h3>🔴 Red Team</h3>
+                    <p>Puan: {{ red_puan }}</p>
+                </div>
+            </div>
+
+            <!-- İtibar Durumu -->
+            <div class="reputation-box">
+                <h3>⭐ İtibar Durumu</h3>
+                <p class="reputation {{ itibar|lower|replace(' ', '-') }}">
+                    {{ itibar }}
+                </p>
+            </div>
+
+            <!-- Butonlar -->
+           <div class="btn-container">
+    {% if oyun_bitti_mi %}
+        <a href="{{ url_for('result', room_id=room_id) }}" class="btn">🏁 Oyun Sonuçları</a>
+    {% elif role == "red" %}
+        <a href="{{ url_for('game_room', room_id=room_id, role=role) }}" class="btn">➡️ Sonraki Tur</a>
+    {% endif %}
+</div>
+        </div>
+    </div>
+
+    <!-- Blue Team için yeni saldırı algılandığında yönlendirme -->
+    <script>
+        const socket = io();
+        const room = "{{ room_id }}";
+        const role = "{{ role }}";
+
+        socket.emit('join', { room: room, role: role });
+
+        if (role === "blue") {
+            socket.on('attack_selected', data => {
+                window.location.href = `/blue_defense/${room}/${role}`;
+            });
+        }
+    </script>
+</body>
+</html>

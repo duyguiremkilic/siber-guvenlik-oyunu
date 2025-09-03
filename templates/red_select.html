@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Red Team Saldırı Seçimi</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* İbre (gauge) stilleri */
+        .gauge-container {
+            width: 100%;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .gauge {
+            position: relative;
+            width: 200px;
+            height: 100px;
+            border-top: 10px solid #ccc;
+            border-radius: 100px 100px 0 0;
+            margin: 0 auto;
+        }
+        .needle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 4px;
+            height: 90px;
+            background: black;
+            transform-origin: bottom center;
+            transform: rotate(0deg);
+            transition: transform 0.5s ease;
+        }
+        .labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        .label-red { color: red; }
+        .label-blue { color: blue; }
+    </style>
+</head>
+<body>
+
+    <!-- İbre -->
+    <div class="gauge-container">
+        <div class="gauge">
+            <div class="needle" id="needle"></div>
+            <div class="labels">
+                <span class="label-red">🔴 Red</span>
+                <span class="label-blue">🔵 Blue</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1>🔴 Red Team - Saldırı Seç</h1>
+                <p>Bir saldırı türü seçerek oyunu başlat!</p>
+            </div>
+
+            <form id="attackForm">
+                <div class="option-grid">
+                    {% for saldiri in saldirilar %}
+                    <div class="option-card">
+                        <input type="radio" id="saldiri{{ loop.index }}" name="attack" value="{{ saldiri }}">
+                        <label for="saldiri{{ loop.index }}">
+                            <strong>{{ saldiri }}</strong>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="btn-container">
+                    <button type="submit" class="btn">🚀 Saldır!</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const room = "{{ room_id }}";
+
+        socket.emit('join', { room: room, role: "red" });
+
+        // İbre kontrolü
+        function setNeedle(angle) {
+            document.getElementById("needle").style.transform = `rotate(${angle}deg)`;
+        }
+
+        document.getElementById("attackForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const selectedAttack = document.querySelector('input[name="attack"]:checked');
+            if (selectedAttack) {
+                socket.emit('red_attack', { room: room, attack: selectedAttack.value });
+                setNeedle(-45); // sola döner
+                setTimeout(() => {
+            window.location.href = `/red_wait/${room}`;
+        }, 500);
+    }
+});
+
+    </script>
+</body>
+</html>

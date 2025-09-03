@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Oyun Odası</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <h2>Oda Kodu: {{ room_id }}</h2>
+    <h3>Takım: {{ role }}</h3>
+
+    <script>
+        const socket = io();
+        const room = "{{ room_id }}";
+        const role = "{{ role }}";
+
+        socket.emit('join', { room: room, role: role });
+
+        socket.on('player_joined', data => {
+            console.log("Oyuncu katıldı:", data);
+        });
+
+        if (role === 'red') {
+            socket.emit('red_attack', { room: room, attack: "Phishing" });
+        }
+
+        if (role === 'blue') {
+            socket.on('attack_selected', data => {
+                console.log("Saldırı geldi:", data.attack);
+                socket.emit('blue_defense', { room: room, defense: ["MFA", "E-posta filtresi"] });
+            });
+        }
+
+        socket.on('defense_result', data => {
+            console.log("Savunma sonucu:", data);
+        });
+    </script>
+</body>
+</html>

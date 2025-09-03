@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Red Team Bekliyor</title>
+     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <h2>🔴 Red Team</h2>
+    <p>Blue Team savunma yapıyor... Tur sonucu birazdan gösterilecek.</p>
+
+    <script>
+        const socket = io();
+        const room = "{{ room_id }}";
+
+        socket.emit('join', { room: room, role: "red" });
+
+        socket.on('defense_result', data => {
+            window.location.href = data.next_url;
+        });
+    </script>
+</body>
+</html>

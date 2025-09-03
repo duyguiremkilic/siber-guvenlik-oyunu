@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blue Team Savunma</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .analog-timer-box {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .analog-timer {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+        .analog-timer svg {
+            width: 100%;
+            height: 100%;
+        }
+        .timer-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5em;
+            font-weight: bold;
+            color: red;
+        }
+        .timeout-box {
+            background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+            color: #b71c1c;
+            font-size: 1.4em;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            animation: shake 0.5s ease-in-out 3;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        /* İbre (gauge) stilleri */
+        .gauge-container {
+            width: 100%;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .gauge {
+            position: relative;
+            width: 200px;
+            height: 100px;
+            border-top: 10px solid #ccc;
+            border-radius: 100px 100px 0 0;
+            margin: 0 auto;
+        }
+        .needle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 4px;
+            height: 90px;
+            background: black;
+            transform-origin: bottom center;
+            transform: rotate(0deg);
+            transition: transform 0.5s ease;
+        }
+        .labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        .label-red { color: red; }
+        .label-blue { color: blue; }
+    </style>
+</head>
+<body>
+
+    <!-- İbre -->
+    <div class="gauge-container">
+        <div class="gauge">
+            <div class="needle" id="needle"></div>
+            <div class="labels">
+                <span class="label-red">🔴 Red</span>
+                <span class="label-blue">🔵 Blue</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1>🔵 Blue Team Savunma - Tur {{ tur }}</h1>
+            </div>
+
+            <!-- Analog süre göstergesi -->
+            <div class="analog-timer-box">
+                <div class="analog-timer">
+                    <svg viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="45" stroke="#ccc" stroke-width="10" fill="none"/>
+                        <circle id="analogProgress" cx="50" cy="50" r="45" stroke="red" stroke-width="10" fill="none"
+                                stroke-dasharray="282.6" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
+                    </svg>
+                    <div class="timer-text"><span id="analogTimer">30</span>s</div>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h2>📋 Saldırı Belirtileri</h2>
+                <p>{{ belirtiler }}</p>
+            </div>
+
+            <div class="budget-indicator">
+                Kalan Bütçe: ${{ butce }}
+            </div>
+
+            <form id="defenseForm">
+                <h2>🛡️ Savunma Önlemleri</h2>
+                <p>(Birden fazla seçebilirsiniz)</p>
+
+                <div class="option-grid">
+                    {% for onlem in onlemler %}
+                    <div class="option-card">
+                        <input type="checkbox" id="onlem{{ loop.index }}" name="secim" value="{{ onlem.ad }}">
+                        <label for="onlem{{ loop.index }}">
+                            <strong>{{ onlem.ad }}</strong><br>
+                            <span style="color: #e65100;">💰 Maliyet: ${{ onlem.maliyet }}</span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="btn-container">
+                    <button type="submit" class="btn">Savunmayı Gönder</button>
+                </div>
+            </form>
+
+            <!-- Süre dolduğunda gösterilecek animasyon kutusu -->
+            <div id="timeoutMessage" class="timeout-box" style="display: none;">
+                ⏰ Süre doldu! Savunma yapılmadı.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const room = "{{ room_id }}";
+        let timeLeft = 30;
+        let savunmaGonderildi = false;
+
+        const analogText = document.getElementById("analogTimer");
+        const analogCircle = document.getElementById("analogProgress");
+        const totalLength = 2 * Math.PI * 45;
+
+        socket.emit('join', { room: room, role: "blue" });
+
+        const timerInterval = setInterval(() => {
+            timeLeft--;
+            analogText.textContent = timeLeft;
+
+            const offset = totalLength * (1 - timeLeft / 30);
+            analogCircle.setAttribute("stroke-dashoffset", offset);
+
+            if (timeLeft <= 0 && !savunmaGonderildi) {
+                clearInterval(timerInterval);
+                document.getElementById("timeoutMessage").style.display = "block";
+                socket.emit('blue_defense', { room: room, defense: [], role: "blue" });
+                savunmaGonderildi = true;
+            }
+        }, 1000);
+
+        document.getElementById("defenseForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            if (savunmaGonderildi) return;
+
+            const secimler = Array.from(document.querySelectorAll('input[name="secim"]:checked')).map(el => el.value);
+            socket.emit('blue_defense', { room: room, defense: secimler, role: "blue" });
+            savunmaGonderildi = true;
+            clearInterval(timerInterval);
+        });
+
+        socket.on('defense_result', data => {
+            window.location.href = data.next_url;
+        });
+
+        // İbre kontrolü
+        function setNeedle(angle) {
+            document.getElementById("needle").style.transform = `rotate(${angle}deg)`;
+        }
+
+        socket.on('red_attack', () => {
+            setNeedle(-45); // sola döner
+        });
+
+        socket.on('blue_defense', () => {
+            setNeedle(45); // sağa döner
+        });
+    </script>
+</body>
+</html>
