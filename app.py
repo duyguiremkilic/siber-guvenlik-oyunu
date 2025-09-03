@@ -223,5 +223,11 @@ def handle_blue_defense(data):
 
     emit('defense_result', {'next_url': f"/tur_sonucu/{room}/blue"}, to=request.sid)
     emit('defense_result', {'next_url': f"/tur_sonucu/{room}/red"}, room=room, skip_sid=request.sid)
+    
+#if __name__ == '__main__':
+ #   socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
+ 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, allow_unsafe_werkzeug=True)
+    import eventlet
+    eventlet.monkey_patch()
+    socketio.run(app, host='0.0.0.0', port=5000)
